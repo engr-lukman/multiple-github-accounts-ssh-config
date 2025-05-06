@@ -1,52 +1,59 @@
-# 🔐 Managing Multiple GitHub Accounts with SSH (Official + Personal)
+# Managing Multiple GitHub Accounts with SSH
 
-This guide walks you through setting up **two separate GitHub accounts** on the same machine using distinct SSH keys and a custom SSH configuration.
+> **Working with both official and personal GitHub accounts on one machine? This guide is for you!**
 
----
+This step-by-step guide helps you set up and manage two GitHub accounts on the same computer, without constantly switching credentials.
 
-## 👤 Account Overview
+## What You'll Achieve
 
-- **Official GitHub**: https://github.com/lukman-official
-  - SSH key: `~/.ssh/id_rsa` (assumed already set up)
-- **Personal GitHub**: https://github.com/engr-lukman
-  - Will use a new SSH key: `~/.ssh/id_ed25519_personal`
+- Use different SSH keys for different GitHub accounts
+- Seamlessly switch between accounts without password prompts
+- Keep your official and personal projects completely separate
 
----
+## Account Setup Overview
 
-## ✅ Step 1: Generate SSH Key for Personal Account
+| Account | GitHub URL | SSH Key |
+|---------|------------|---------|
+| **Official** | github.com/lukman-official | ~/.ssh/id_rsa (default) |
+| **Personal** | github.com/engr-lukman | ~/.ssh/id_ed25519_personal (new) |
+
+## Setup Guide
+
+### Step-01: Generate a New SSH Key for Your Personal Account
 
 ```bash
 ssh-keygen -t ed25519 -C "engr.lukman@gmail.com"
 ```
 
 When prompted:
+- Enter: `~/.ssh/id_ed25519_personal` for the file location
+- Set a passphrase (recommended) or leave empty
+
+### Step-02: Add Your New Key to SSH Agent
 
 ```bash
-Enter file in which to save the key: ~/.ssh/id_ed25519_personal
-```
-
-Leave the passphrase empty (or set one if preferred).
-
-## ✅ Step 2: Add the Key to the SSH Agent
-
-```bash
+# Start the SSH agent
 eval "$(ssh-agent -s)"
+
+# Add your personal key
 ssh-add ~/.ssh/id_ed25519_personal
 ```
 
-## ✅ Step 3: Add Public Key to Personal GitHub Account
+### Step-03: Add Key to Your Personal GitHub Account
 
-Print your public key:
+1. Copy your public key:
+   ```bash
+   cat ~/.ssh/id_ed25519_personal.pub
+   ```
 
-```bash
-cat ~/.ssh/id_ed25519_personal.pub
-```
+2. Add to GitHub:
+   - Go to [GitHub SSH Settings](https://github.com/settings/keys) (while logged into your personal account)
+   - Click "New SSH key"
+   - Add a title (e.g., "My Development Machine")
+   - Paste the key content
+   - Click "Add SSH key"
 
-Go to: https://github.com/settings/keys (logged into personal account)
-
-Click "New SSH key", give it a title (e.g., Personal Laptop), and paste the copied key.
-
-## ✅ Step 4: Configure SSH for Multiple Accounts
+### Step-04: Create SSH Config for Multiple Accounts
 
 Edit your SSH config file:
 
@@ -54,75 +61,75 @@ Edit your SSH config file:
 nano ~/.ssh/config
 ```
 
-Paste the following:
+Add these configurations:
 
-```ssh
-# Official GitHub Account (Default)
+```
+# Default (Official) GitHub Account
 Host github.com
   HostName github.com
   User git
   IdentityFile ~/.ssh/id_rsa
   IdentitiesOnly yes
 
-# Personal GitHub Account (using port 443 to bypass firewalls)
+# Personal GitHub Account
 Host github-personal
   HostName ssh.github.com
   User git
-  Port 443
+  Port 443  # Uses port 443 to bypass potential firewalls
   IdentityFile ~/.ssh/id_ed25519_personal
   IdentitiesOnly yes
 ```
 
-Save and close the file.
+### Step-05: Work with Your Personal Repositories
 
-## ✅ Step 5: Clone or Update Personal Repositories
-
-Clone using personal alias:
-
+**To clone a new repo:**
 ```bash
-git clone git@github-personal:engr-lukman/engr-lukman.github.io.git
+git clone git@github-personal:engr-lukman/your-repo-name.git
 ```
 
-Or update an existing remote:
-
+**To update an existing repo:**
 ```bash
-cd engr-lukman.github.io
-git remote set-url origin git@github-personal:engr-lukman/engr-lukman.github.io.git
+cd your-repo-directory
+git remote set-url origin git@github-personal:engr-lukman/your-repo-name.git
 ```
 
-## ✅ Step 6: Test the SSH Connection
+### Step-06: Test Your Configuration
+
+Verify the connection works:
 
 ```bash
 ssh -T git@github-personal
 ```
 
-You should see:
+You should see: `Hi engr-lukman! You've successfully authenticated, but GitHub does not provide shell access.`
 
-```
-Hi engr-lukman! You've successfully authenticated, but GitHub does not provide shell access.
-```
+### Step-07: Set Repository-Specific Git Identity
 
-If you get a port 22 error, double-check your SSH config is using Port 443.
-
-## ✅ Step 7: Set Git Identity Per Repository
-
-Inside your personal repository:
-
+**For personal projects:**
 ```bash
+cd your-personal-repo
 git config user.name "Lukman"
 git config user.email "engr.lukman@gmail.com"
 ```
 
-Inside your official repository (if needed):
-
+**For official projects:**
 ```bash
+cd your-official-repo
 git config user.name "Your Official Name"
 git config user.email "your.official@company.com"
 ```
 
-## ✅ Done!
+## Quick Reference
 
-You can now work with multiple GitHub accounts seamlessly using SSH keys and host aliases.
+- For **official** repositories: Use `github.com` (default)
+- For **personal** repositories: Use `github-personal`
 
-- Use github.com for official account.
-- Use github-personal for personal account.
+## Troubleshooting
+
+- **Connection error on port 22?** Make sure your SSH config uses Port 443 for the personal account
+- **Permission denied?** Check that you've added the correct SSH key to the correct GitHub account
+- **Wrong identity used?** Verify your repository's remote URL is using the correct host alias
+
+---
+
+*Last updated: May 6, 2025*
